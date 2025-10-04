@@ -78,6 +78,7 @@ ESP.Elements.Box = function(object)
 
     return self
 end
+
 ESP.Elements.Name = function(object)
     local self = {}
 
@@ -90,7 +91,7 @@ ESP.Elements.Name = function(object)
 
     local NameLabel = Instance.new("TextLabel")
     NameLabel.Text = object.Parent.Name or "Player"
-    NameLabel.Size = UDim2.new(0, 100, 0, 20)
+    NameLabel.Size = UDim2.new(0, 100, 0, 18)
     NameLabel.BackgroundTransparency = 1
     NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     NameLabel.TextStrokeTransparency = 0
@@ -112,13 +113,12 @@ ESP.Elements.Name = function(object)
             return
         end
 
-        local headPos = object.Position + Vector3.new(0, 3, 0)
+        local head = object.Parent:FindFirstChild("Head") or object
+        local headPos = head.Position + Vector3.new(0, 0.5, 0)
         local screenPos, onScreen = cam:WorldToViewportPoint(headPos)
 
         if onScreen then
-            local distance = (cam.CFrame.Position - object.Position).Magnitude
-            local scale = math.clamp(200 / distance, 0.5, 1.5)
-            NameLabel.TextSize = 14 * scale
+            NameLabel.TextSize = 14
 
             NameLabel.Position = UDim2.new(0, screenPos.X - NameLabel.AbsoluteSize.X / 2, 0, screenPos.Y - NameLabel.AbsoluteSize.Y / 2)
             NameLabel.Visible = true
@@ -140,6 +140,7 @@ ESP.Elements.Name = function(object)
 
     return self
 end
+
 
 ESP.Elements.HealthBar = function(object,boxObject)
     local self = {}
