@@ -30,7 +30,7 @@ ESP.Elements.Box = function(object)
     self.Update = RunService.RenderStepped:Connect(function()
         if not object.Parent then
             self.Update:Disconnect()
-            Square:Remove()
+            Square.Visible = false
             return
         end
 
@@ -71,7 +71,7 @@ ESP.Elements.Box = function(object)
         end
 
         if self.Square then
-            self.Square:Remove()
+            self.Square.Visible = false
             self.Square = nil
         end
     end
@@ -93,9 +93,9 @@ ESP.Elements.Name = function(object)
     self.Text = NameText
     
     self.Update = RunService.RenderStepped:Connect(function()
-        if not object.Parent then
+        if not object.Parent or not object then
             self.Update:Disconnect()
-            NameText:Remove()
+            NameText.Visible = false
             return
         end
     
@@ -116,7 +116,7 @@ ESP.Elements.Name = function(object)
             self.Update = nil
         end
         if self.Text then
-            self.Text:Remove()
+            self.Text.Visible = false
             self.Text = nil
         end
     end
@@ -154,8 +154,8 @@ ESP.Elements.HealthBar = function(object,boxObject)
         end
         if not boxObject.Square then
             if self.Update then self.Update:Disconnect() end
-            MainBar:Remove()
-            OutlineBar:Remove()
+            MainBar.Visible = false
+            OutlineBar.Visible = false
             return
         end
 
@@ -191,11 +191,11 @@ ESP.Elements.HealthBar = function(object,boxObject)
             self.Update = nil
         end
         if self.Main then
-            self.Main:Remove()
+            self.Main.Visible = false
             self.Main = nil
         end
         if self.Outline then
-            self.Outline:Remove()
+            self.Outline.Visible = false
             self.Outline = nil
         end
     end
