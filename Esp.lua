@@ -79,66 +79,67 @@ ESP.Elements.Box = function(object)
     return self
 end
 
-ESP.Elements.Name = function(object)
+function ESP.Elements.Name(object)
     local self = {}
 
-    local Player = game:GetService("Players").LocalPlayer
-    local PlayerGui = Player:WaitForChild("PlayerGui")
-    local Gui = PlayerGui:FindFirstChild("ESPGui") or Instance.new("ScreenGui")
-    Gui.Name = "ESPGui"
-    Gui.ResetOnSpawn = false
-    Gui.Parent = PlayerGui
+    local playerGui = Player:WaitForChild("PlayerGui")
+    local gui = playerGui:FindFirstChild("ESPGui") or Instance.new("ScreenGui")
+    gui.Name = "ESPGui"
+    gui.ResetOnSpawn = false
+    gui.Parent = playerGui
 
     local NameLabel = Instance.new("TextLabel")
-    NameLabel.Text = object.Parent.Name or "Player"
-    NameLabel.Size = UDim2.new(0, 100, 0, 18)
+    NameLabel.Text = (object.Parent and object.Parent.Name) or "Player"
+    NameLabel.Size = UDim2.new(0, 140, 0, 20)
     NameLabel.BackgroundTransparency = 1
     NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     NameLabel.TextStrokeTransparency = 0
     NameLabel.TextScaled = false
+    NameLabel.TextSize = 14
     NameLabel.Font = Enum.Font.SourceSansBold
     NameLabel.TextXAlignment = Enum.TextXAlignment.Center
     NameLabel.TextYAlignment = Enum.TextYAlignment.Center
-    NameLabel.Visible = true
-    NameLabel.Parent = Gui
+    NameLabel.Visible = false
+ 
+    NameLabel.AnchorPoint = Vector2.new(0.5, 1)
+    NameLabel.Parent = gui
 
     self.Label = NameLabel
 
-    local cam = workspace.CurrentCamera
-    local head = object.Parent:FindFirstChild("Head") or object
-
+    local head = (object.Parent and object.Parent:FindFirstChild("Head")) or object
     local BASE_OFFSET = 1.5
 
-    self.Update = RunService.RenderStepped:Connect(function()
-        if not object.Parent then
-            self.Update:Disconnect()
-            NameLabel:Destroy()
+    local conn
+    conn = RunService.RenderStepped:Connect(function()
+        if not object.Parent or not head or not head.Parent then
+            if conn and conn.Connected then conn:Disconnect() end
+            if NameLabel and NameLabel.Parent then NameLabel:Destroy() end
             return
         end
 
-        local headPos = head.Position + Vector3.new(0, BASE_OFFSET, 0)
-        local screenPos, onScreen = cam:WorldToViewportPoint(headPos)
+        NameLabel.Text = (object.Parent and object.Parent.Name) or NameLabel.Text
 
-        if onScreen then
-            local scaleFactor = 1 / screenPos.Z
-            local yOffset = -BASE_OFFSET * 20 * scaleFactor
-            NameLabel.Position = UDim2.new(0, screenPos.X - NameLabel.AbsoluteSize.X / 2, 0, screenPos.Y + yOffset - NameLabel.AbsoluteSize.Y / 2)
+        local topWorld = head.Position + Vector3.new(0, BASE_OFFSET, 0)
+        local bottomWorld = head.Position
 
+        local topScreen, topOnScreen = Camera:WorldToViewportPoint(topWorld)
+        local bottomScreen, bottomOnScreen = Camera:WorldToViewportPoint(bottomWorld)
+
+        if topOnScreen or bottomOnScreen then
+            local x = topScreen.X
+            local y = topScreen.Y - 4
+            NameLabel.Position = UDim2.new(0, x, 0, y)
             NameLabel.Visible = true
         else
             NameLabel.Visible = false
         end
     end)
 
+    self.Update = conn
+
     self.Destroy = function()
-        if self.Update then
-            self.Update:Disconnect()
-            self.Update = nil
-        end
-        if self.Label then
-            self.Label:Destroy()
-            self.Label = nil
-        end
+        if conn and conn.Connected then conn:Disconnect() end
+        if NameLabel and NameLabel.Parent then NameLabel:Destroy() end
     end
 
     return self
