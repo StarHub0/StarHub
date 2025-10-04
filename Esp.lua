@@ -79,73 +79,50 @@ ESP.Elements.Box = function(object)
     return self
 end
 
-function ESP.Elements.Name(object)
+ESP.Elements.Name = function(object)
     local self = {}
-
-    local playerGui = Player:WaitForChild("PlayerGui")
-    local gui = playerGui:FindFirstChild("ESPGui") or Instance.new("ScreenGui")
-    gui.Name = "ESPGui"
-    gui.ResetOnSpawn = false
-    gui.Parent = playerGui
-
-    local NameLabel = Instance.new("TextLabel")
-    NameLabel.Text = (object.Parent and object.Parent.Name) or "Player"
-    NameLabel.Size = UDim2.new(0, 140, 0, 20)
-    NameLabel.BackgroundTransparency = 1
-    NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NameLabel.TextStrokeTransparency = 0
-    NameLabel.TextScaled = false
-    NameLabel.TextSize = 14
-    NameLabel.Font = Enum.Font.SourceSansBold
-    NameLabel.TextXAlignment = Enum.TextXAlignment.Center
-    NameLabel.TextYAlignment = Enum.TextYAlignment.Center
-    NameLabel.Visible = false
- 
-    NameLabel.AnchorPoint = Vector2.new(0.5, 1)
-    NameLabel.Parent = gui
-
-    self.Label = NameLabel
-
-    local head = (object.Parent and object.Parent:FindFirstChild("Head")) or object
-    local BASE_OFFSET = 1.5
-
-    local conn
-    conn = RunService.RenderStepped:Connect(function()
-        if not object.Parent or not head or not head.Parent then
-            if conn and conn.Connected then conn:Disconnect() end
-            if NameLabel and NameLabel.Parent then NameLabel:Destroy() end
+    
+    local NameText = Drawing.new("Text")
+    NameText.Text = object.Parent.Name or "Player"
+    NameText.Size = 20
+    NameText.Color = Color3.fromRGB(255, 255, 255)
+    NameText.Center = true
+    NameText.Outline = true
+    NameText.Visible = true
+    
+    self.Text = NameText
+    
+    self.Update = RunService.RenderStepped:Connect(function()
+        if not object.Parent then
+            self.Update:Disconnect()
+            NameText:Remove()
             return
         end
-
-        NameLabel.Text = (object.Parent and object.Parent.Name) or NameLabel.Text
-
-        local topWorld = head.Position + Vector3.new(0, BASE_OFFSET, 0)
-        local bottomWorld = head.Position
-
-        local topScreen, topOnScreen = Camera:WorldToViewportPoint(topWorld)
-        local bottomScreen, bottomOnScreen = Camera:WorldToViewportPoint(bottomWorld)
-
-        if topOnScreen or bottomOnScreen then
-            local x = topScreen.X
-            local y = topScreen.Y - 4
-            NameLabel.Position = UDim2.new(0, x, 0, y)
-            NameLabel.Visible = true
+    
+        local pos = object.Position + Vector3.new(0, 3, 0)
+        local screenPos, onScreen = Camera:WorldToViewportPoint(pos)
+    
+        if onScreen and IsWindowFocused and game then
+            NameText.Position = Vector2.new(screenPos.X, screenPos.Y)
+            NameText.Visible = true
         else
-            NameLabel.Visible = false
+            NameText.Visible = false
         end
     end)
-
-    self.Update = conn
-
+    
     self.Destroy = function()
-        if conn and conn.Connected then conn:Disconnect() end
-        if NameLabel and NameLabel.Parent then NameLabel:Destroy() end
+        if self.Update then
+            self.Update:Disconnect()
+            self.Update = nil
+        end
+        if self.Text then
+            self.Text:Remove()
+            self.Text = nil
+        end
     end
-
+    
     return self
 end
-
-
 
 ESP.Elements.HealthBar = function(object,boxObject)
     local self = {}
@@ -263,9 +240,6 @@ function ESP:WrapObject(object)
     return entity
 end
 
-return ESP
---[[
-
 local esp = ESP.new({
     Box = false,
     Name = true,
@@ -282,4 +256,11 @@ for _, player in pairs(game:GetService("Players"):GetPlayers()) do
 
         table.insert(Objects, entity)
     end
+end
+
+--[[
+
+task.wait(5)
+for _,obj in pairs(Objects) do
+    obj:Destroy()
 end]]
