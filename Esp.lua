@@ -240,27 +240,4 @@ function ESP:WrapObject(object)
     return entity
 end
 
-local esp = ESP.new({
-    Box = false,
-    Name = true,
-    Health = false
-})
-
-
-local Objects = {}
-
-for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-    local character = player.Character
-    if character then
-        local entity = esp:WrapObject(character)
-
-        table.insert(Objects, entity)
-    end
-end
-
---[[
-
-task.wait(5)
-for _,obj in pairs(Objects) do
-    obj:Destroy()
-end]]
+return ESP
