@@ -78,7 +78,6 @@ ESP.Elements.Box = function(object)
 
     return self
 end
-
 ESP.Elements.Name = function(object)
     local self = {}
 
@@ -95,13 +94,16 @@ ESP.Elements.Name = function(object)
     NameLabel.BackgroundTransparency = 1
     NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     NameLabel.TextStrokeTransparency = 0
-    NameLabel.TextScaled = true
+    NameLabel.TextScaled = false
+    NameLabel.Font = Enum.Font.SourceSansBold
     NameLabel.TextXAlignment = Enum.TextXAlignment.Center
     NameLabel.TextYAlignment = Enum.TextYAlignment.Center
     NameLabel.Visible = true
     NameLabel.Parent = Gui
 
     self.Label = NameLabel
+
+    local cam = workspace.CurrentCamera
 
     self.Update = RunService.RenderStepped:Connect(function()
         if not object.Parent then
@@ -110,11 +112,14 @@ ESP.Elements.Name = function(object)
             return
         end
 
-        local cam = workspace.CurrentCamera
-        local pos = object.Position
-        local screenPos, onScreen = cam:WorldToViewportPoint(pos)
+        local headPos = object.Position + Vector3.new(0, 3, 0)
+        local screenPos, onScreen = cam:WorldToViewportPoint(headPos)
 
         if onScreen then
+            local distance = (cam.CFrame.Position - object.Position).Magnitude
+            local scale = math.clamp(200 / distance, 0.5, 1.5)
+            NameLabel.TextSize = 14 * scale
+
             NameLabel.Position = UDim2.new(0, screenPos.X - NameLabel.AbsoluteSize.X / 2, 0, screenPos.Y - NameLabel.AbsoluteSize.Y / 2)
             NameLabel.Visible = true
         else
@@ -135,7 +140,6 @@ ESP.Elements.Name = function(object)
 
     return self
 end
-
 
 ESP.Elements.HealthBar = function(object,boxObject)
     local self = {}
