@@ -105,6 +105,9 @@ ESP.Elements.Name = function(object)
     self.Label = NameLabel
 
     local cam = workspace.CurrentCamera
+    local head = object.Parent:FindFirstChild("Head") or object
+
+    local BASE_OFFSET = 1.5
 
     self.Update = RunService.RenderStepped:Connect(function()
         if not object.Parent then
@@ -113,14 +116,14 @@ ESP.Elements.Name = function(object)
             return
         end
 
-        local head = object.Parent:FindFirstChild("Head") or object
-        local headPos = head.Position + Vector3.new(0, 0.5, 0)
+        local headPos = head.Position + Vector3.new(0, BASE_OFFSET, 0)
         local screenPos, onScreen = cam:WorldToViewportPoint(headPos)
 
         if onScreen then
-            NameLabel.TextSize = 14
+            local scaleFactor = 1 / screenPos.Z
+            local yOffset = -BASE_OFFSET * 20 * scaleFactor
+            NameLabel.Position = UDim2.new(0, screenPos.X - NameLabel.AbsoluteSize.X / 2, 0, screenPos.Y + yOffset - NameLabel.AbsoluteSize.Y / 2)
 
-            NameLabel.Position = UDim2.new(0, screenPos.X - NameLabel.AbsoluteSize.X / 2, 0, screenPos.Y - NameLabel.AbsoluteSize.Y / 2)
             NameLabel.Visible = true
         else
             NameLabel.Visible = false
@@ -140,6 +143,7 @@ ESP.Elements.Name = function(object)
 
     return self
 end
+
 
 
 ESP.Elements.HealthBar = function(object,boxObject)
