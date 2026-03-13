@@ -145,7 +145,7 @@ ESP.Elements.Name = function(object)
 
 end
 
-ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
+ESP.Elements.HealthBar = function(object, boxObject, getHealth, getMaxHealth)
 
 	local self = {}
 
@@ -163,64 +163,70 @@ ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
 	self.Main = Main
 	self.Outline = Outline
 
-	self.Update = RunService.RenderStepped:Connect(function()
+	local function hide()
+		Main.Visible = false
+		Outline.Visible = false
+	end
 
-		if not object or not object.Parent then
-			Main.Visible = false
-			Outline.Visible = false
-			return
-		end
-
-		if not IsWindowFocused then
-			Main.Visible = false
-			Outline.Visible = false
-			return
-		end
-
-		if not boxObject or not boxObject.Square then
-			Main.Visible = false
-			Outline.Visible = false
-			return
-		end
-
-		local square = boxObject.Square
-
-		if not square.Visible then
-			Main.Visible = false
-			Outline.Visible = false
-			return
-		end
+	local function getHP()
 
 		local hp = 0
 		local max = 100
-		
+
 		if getHealth then
-			local ok,val = pcall(getHealth)
+			local ok, val = pcall(getHealth)
 			if ok and val then
 				hp = val
 			end
 		end
-		
+
 		if getMaxHealth then
-			local ok,val = pcall(getMaxHealth)
+			local ok, val = pcall(getMaxHealth)
 			if ok and val then
 				max = val
 			end
 		end
-		
-		print("HP:",hp,"MAX:",max)
+
+		hp = tonumber(hp) or 0
+		max = tonumber(max) or 100
 
 		if max <= 0 then max = 100 end
 		if hp < 0 then hp = 0 end
 
+		return hp, max
+	end
+
+	self.Update = RunService.RenderStepped:Connect(function()
+
+		if not object or not object.Parent then
+			hide()
+			return
+		end
+
+		if not IsWindowFocused then
+			hide()
+			return
+		end
+
+		if not boxObject or not boxObject.Square then
+			hide()
+			return
+		end
+
+		local square = boxObject.Square
+		if not square.Visible then
+			hide()
+			return
+		end
+
+		local hp, max = getHP()
 		local ratio = math.clamp(hp / max, 0, 1)
 
 		local boxPos = square.Position
 		local boxSize = square.Size
 
 		if boxSize.Y <= 0 then
-			Main.Visible = false
-			Outline.Visible = false
+			hide()
 			return
 		end
 
@@ -247,27 +253,20 @@ ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
 	end)
 
 	function self:Destroy()
+
 		if self.Update then
 			self.Update:Disconnect()
 		end
+
 		if Main then
 			Main:Destroy()
 		end
+
 		if Outline then
 			Outline:Destroy()
 		end
+
 	end
-
-	return self
-
-end
-
-function ESP.new(config)
-
-	local self=setmetatable({}, {__index=ESP})
-
-	self.Config=config or {}
-	self.Objects={}
 
 	return self
 
