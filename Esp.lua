@@ -191,8 +191,24 @@ ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
 			return
 		end
 
-		local hp = getHealth and getHealth() or 0
-		local max = getMaxHealth and getMaxHealth() or 100
+		local hp = 0
+		local max = 100
+		
+		if getHealth then
+			local ok,val = pcall(getHealth)
+			if ok and val then
+				hp = val
+			end
+		end
+		
+		if getMaxHealth then
+			local ok,val = pcall(getMaxHealth)
+			if ok and val then
+				max = val
+			end
+		end
+		
+		print("HP:",hp,"MAX:",max)
 
 		if max <= 0 then max = 100 end
 		if hp < 0 then hp = 0 end
