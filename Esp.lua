@@ -5,7 +5,6 @@ Usage:
 espInstance = ESP.new({Box = true, Name = true, Health = true})
 espInstance:WrapObject(char)
 ]]
-
 local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 local UserInputService = game:GetService("UserInputService")
@@ -37,7 +36,7 @@ ESP.Elements.Box = function(object)
 
 	self.Update = RunService.RenderStepped:Connect(function()
 
-		if not object.Parent then
+		if not object or not object.Parent then
 			Square.Visible = false
 			self.Update:Disconnect()
 			return
@@ -54,38 +53,44 @@ ESP.Elements.Box = function(object)
 		local left,leftVis = Camera:WorldToViewportPoint(pos - right*2)
 		local rightPos,rightVis = Camera:WorldToViewportPoint(pos + right*2)
 
-		if topVis and bottomVis and leftVis and rightVis and IsWindowFocused then
-
-			local width = math.max(math.abs(rightPos.X-left.X),5)
-			local height = math.max(math.abs(bottom.Y-top.Y),width/2)
-
-			local size = Vector2.new(width,height)
-
-			local position = Vector2.new(
-				(left.X+rightPos.X)/2 - size.X/2,
-				math.min(top.Y,bottom.Y)
-			)
-
-			Square.Size = size
-			Square.Position = position
-			Square.Visible = true
-
-		else
+		if not (topVis and bottomVis and leftVis and rightVis) then
 			Square.Visible = false
+			return
 		end
+
+		if not IsWindowFocused then
+			Square.Visible = false
+			return
+		end
+
+		if top.Z < 0 or bottom.Z < 0 or left.Z < 0 or rightPos.Z < 0 then
+			Square.Visible = false
+			return
+		end
+
+		local width = math.max(math.abs(rightPos.X-left.X),5)
+		local height = math.max(math.abs(bottom.Y-top.Y),width/2)
+
+		local size = Vector2.new(width,height)
+
+		local position = Vector2.new(
+			(left.X+rightPos.X)/2 - size.X/2,
+			math.min(top.Y,bottom.Y)
+		)
+
+		Square.Size = size
+		Square.Position = position
+		Square.Visible = true
 
 	end)
 
 	function self:Destroy()
-
 		if self.Update then
 			self.Update:Disconnect()
 		end
-
 		if Square then
 			Square.Visible = false
 		end
-
 	end
 
 	return self
@@ -108,7 +113,7 @@ ESP.Elements.Name = function(object)
 
 	self.Update = RunService.RenderStepped:Connect(function()
 
-		if not object.Parent then
+		if not object or not object.Parent then
 			Text.Visible = false
 			self.Update:Disconnect()
 			return
@@ -118,7 +123,7 @@ ESP.Elements.Name = function(object)
 
 		local screenPos,visible = Camera:WorldToViewportPoint(pos)
 
-		if visible and IsWindowFocused then
+		if visible and screenPos.Z > 0 and IsWindowFocused then
 			Text.Position = Vector2.new(screenPos.X,screenPos.Y)
 			Text.Visible = true
 		else
@@ -128,15 +133,12 @@ ESP.Elements.Name = function(object)
 	end)
 
 	function self:Destroy()
-
 		if self.Update then
 			self.Update:Disconnect()
 		end
-
 		if Text then
 			Text.Visible = false
 		end
-
 	end
 
 	return self
@@ -159,7 +161,7 @@ ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
 
 	self.Update = RunService.RenderStepped:Connect(function()
 
-		if not object.Parent then
+		if not object or not object.Parent then
 			Main.Visible=false
 			Outline.Visible=false
 			return
@@ -171,7 +173,7 @@ ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
 			return
 		end
 
-		if not boxObject or not boxObject.Square then
+		if not boxObject or not boxObject.Square or not boxObject.Square.Visible then
 			Main.Visible=false
 			Outline.Visible=false
 			return
@@ -209,19 +211,15 @@ ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
 	end)
 
 	function self:Destroy()
-
 		if self.Update then
 			self.Update:Disconnect()
 		end
-
 		if Main then
 			Main.Visible=false
 		end
-
 		if Outline then
 			Outline.Visible=false
 		end
-
 	end
 
 	return self
@@ -287,11 +285,9 @@ function ESP:WrapObject(object)
 	end
 
 	function entity:Destroy()
-
 		if entity.Box then entity.Box:Destroy() end
 		if entity.Name then entity.Name:Destroy() end
 		if entity.Health then entity.Health:Destroy() end
-
 	end
 
 	table.insert(self.Objects,entity)
