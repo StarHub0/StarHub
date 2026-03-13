@@ -331,4 +331,15 @@ function ESP:WrapObject(object)
 
 end
 
+function ESP.new(config)
+
+	local self = setmetatable({}, {__index = ESP})
+
+	self.Config = config or {}
+	self.Objects = {}
+
+	return self
+
+end
+
 return ESP
