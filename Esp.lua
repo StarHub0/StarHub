@@ -1,13 +1,16 @@
-local RunService = game:GetService("RunService")
+-- Feel free to use, made by Hiasei
 
+local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 
-IsWindowFocused = true
+local IsWindowFocused = true
+
 UserInputService.WindowFocused:Connect(function()
 	IsWindowFocused = true
 end)
+
 UserInputService.WindowFocusReleased:Connect(function()
 	IsWindowFocused = false
 end)
@@ -15,235 +18,280 @@ end)
 local ESP = {Elements = {}}
 
 ESP.Elements.Box = function(object)
-    local self = {}
 
-    local Square = Drawing.new("Square")
-    Square.Size = Vector2.new(100, 100)
-    Square.Position = Vector2.new(300, 300)
-    Square.Color = Color3.fromRGB(0, 255, 0)
-    Square.Thickness = 2
-    Square.Transparency = 1
-    Square.Filled = false
+	local self = {}
 
-    self.Square = Square
+	local Square = Drawing.new("Square")
+	Square.Color = Color3.fromRGB(0,255,0)
+	Square.Thickness = 2
+	Square.Filled = false
+	Square.Transparency = 1
 
-    self.Update = RunService.RenderStepped:Connect(function()
-        if not object.Parent then
-            self.Update:Disconnect()
-            Square.Visible = false
-            return
-        end
+	self.Square = Square
 
-        local partCFrame = object.CFrame
-        local partPos = partCFrame.Position
-        local up = partCFrame.UpVector
-        local right = partCFrame.RightVector
+	self.Update = RunService.RenderStepped:Connect(function()
 
-        local top, topOnScreen = Camera:WorldToViewportPoint(partPos + (up * 2))
-        local bottom, bottomOnScreen = Camera:WorldToViewportPoint(partPos - (up * 2))
+		if not object.Parent then
+			Square.Visible = false
+			self.Update:Disconnect()
+			return
+		end
 
-        local left, leftOnScreen = Camera:WorldToViewportPoint(partPos - (right * 2))
-        local rightPos, rightOnScreen = Camera:WorldToViewportPoint(partPos + (right * 2))
+		local cf = object.CFrame
+		local pos = cf.Position
 
-        if topOnScreen and bottomOnScreen and leftOnScreen and rightOnScreen and IsWindowFocused and game then
-            Square.Visible = true
+		local up = cf.UpVector
+		local right = cf.RightVector
 
-            local width = math.max(math.abs(rightPos.X - left.X), 5)
-            local height = math.max(math.abs(bottom.Y - top.Y), width / 2)
+		local top,topVis = Camera:WorldToViewportPoint(pos + up*2)
+		local bottom,bottomVis = Camera:WorldToViewportPoint(pos - up*2)
+		local left,leftVis = Camera:WorldToViewportPoint(pos - right*2)
+		local rightPos,rightVis = Camera:WorldToViewportPoint(pos + right*2)
 
-            local size = Vector2.new(width, height)
-            local position = Vector2.new(
-                (left.X + rightPos.X) / 2 - size.X / 2,
-                math.min(top.Y, bottom.Y)
-            )
+		if topVis and bottomVis and leftVis and rightVis and IsWindowFocused then
 
-            Square.Size = size
-            Square.Position = position
-        else
-            Square.Visible = false
-        end
-    end)
+			local width = math.max(math.abs(rightPos.X-left.X),5)
+			local height = math.max(math.abs(bottom.Y-top.Y),width/2)
 
-    self.Destroy = function()
-        if self.Update then
-            self.Update:Disconnect()
-            self.Update = nil
-        end
+			local size = Vector2.new(width,height)
 
-        if self.Square then
-            self.Square.Visible = false
-            self.Square = nil
-        end
-    end
+			local position = Vector2.new(
+				(left.X+rightPos.X)/2 - size.X/2,
+				math.min(top.Y,bottom.Y)
+			)
 
-    return self
+			Square.Size = size
+			Square.Position = position
+			Square.Visible = true
+
+		else
+			Square.Visible = false
+		end
+
+	end)
+
+	function self:Destroy()
+
+		if self.Update then
+			self.Update:Disconnect()
+		end
+
+		if Square then
+			Square.Visible = false
+		end
+
+	end
+
+	return self
+
 end
 
 ESP.Elements.Name = function(object)
-    local self = {}
-    
-    local NameText = Drawing.new("Text")
-    NameText.Text = object.Parent.Name or "Player"
-    NameText.Size = 20
-    NameText.Color = Color3.fromRGB(255, 255, 255)
-    NameText.Center = true
-    NameText.Outline = true
-    NameText.Visible = true
-    
-    self.Text = NameText
-    
-    self.Update = RunService.RenderStepped:Connect(function()
-        if not object.Parent or not object then
-            self.Update:Disconnect()
-            NameText.Visible = false
-            return
-        end
-    
-        local pos = object.Position + Vector3.new(0, 3, 0)
-        local screenPos, onScreen = Camera:WorldToViewportPoint(pos)
-    
-        if onScreen and IsWindowFocused and game then
-            NameText.Position = Vector2.new(screenPos.X, screenPos.Y)
-            NameText.Visible = true
-        else
-            NameText.Visible = false
-        end
-    end)
-    
-    self.Destroy = function()
-        if self.Update then
-            self.Update:Disconnect()
-            self.Update = nil
-        end
-        if self.Text then
-            self.Text.Visible = false
-            self.Text = nil
-        end
-    end
-    
-    return self
+
+	local self = {}
+
+	local Text = Drawing.new("Text")
+	Text.Size = 20
+	Text.Center = true
+	Text.Outline = true
+	Text.Color = Color3.fromRGB(255,255,255)
+
+	Text.Text = object.Parent.Name
+
+	self.Text = Text
+
+	self.Update = RunService.RenderStepped:Connect(function()
+
+		if not object.Parent then
+			Text.Visible = false
+			self.Update:Disconnect()
+			return
+		end
+
+		local pos = object.Position + Vector3.new(0,3,0)
+
+		local screenPos,visible = Camera:WorldToViewportPoint(pos)
+
+		if visible and IsWindowFocused then
+			Text.Position = Vector2.new(screenPos.X,screenPos.Y)
+			Text.Visible = true
+		else
+			Text.Visible = false
+		end
+
+	end)
+
+	function self:Destroy()
+
+		if self.Update then
+			self.Update:Disconnect()
+		end
+
+		if Text then
+			Text.Visible = false
+		end
+
+	end
+
+	return self
+
 end
 
-ESP.Elements.HealthBar = function(object, boxObject, getHealth, getMaxHealth)
-    local self = {}
+ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
 
-    local MainBar = Drawing.new("Line")
-    MainBar.Thickness = 4
-    MainBar.Visible = false
+	local self = {}
 
-    local OutlineBar = Drawing.new("Line")
-    OutlineBar.Color = Color3.fromRGB(0,0,0)
-    OutlineBar.Thickness = 6
-    OutlineBar.Visible = false
+	local Main = Drawing.new("Line")
+	Main.Thickness = 4
 
-    self.Main = MainBar
-    self.Outline = OutlineBar
+	local Outline = Drawing.new("Line")
+	Outline.Color = Color3.fromRGB(0,0,0)
+	Outline.Thickness = 6
 
-    self.Update = RunService.RenderStepped:Connect(function()
+	self.Main = Main
+	self.Outline = Outline
 
-        if not object.Parent then
-            MainBar.Visible = false
-            OutlineBar.Visible = false
-            return
-        end
+	self.Update = RunService.RenderStepped:Connect(function()
 
-        if not IsWindowFocused then
-            MainBar.Visible = false
-            OutlineBar.Visible = false
-            return
-        end
+		if not object.Parent then
+			Main.Visible=false
+			Outline.Visible=false
+			return
+		end
 
-        if not boxObject or not boxObject.Square then
-            MainBar.Visible = false
-            OutlineBar.Visible = false
-            return
-        end
+		if not IsWindowFocused then
+			Main.Visible=false
+			Outline.Visible=false
+			return
+		end
 
-        local health = getHealth and getHealth() or 0
-        local maxHealth = getMaxHealth and getMaxHealth() or 1
+		if not boxObject or not boxObject.Square then
+			Main.Visible=false
+			Outline.Visible=false
+			return
+		end
 
-        local ratio = math.clamp(health / maxHealth, 0, 1)
+		local hp = getHealth and getHealth() or 0
+		local max = getMaxHealth and getMaxHealth() or 100
 
-        local boxPos = boxObject.Square.Position
-        local boxSize = boxObject.Square.Size
+		local ratio = math.clamp(hp/max,0,1)
 
-        local barX = boxPos.X - 6
-        local topY = boxPos.Y
-        local bottomY = boxPos.Y + boxSize.Y
+		local boxPos = boxObject.Square.Position
+		local boxSize = boxObject.Square.Size
 
-        local healthHeight = boxSize.Y * ratio
+		local barX = boxPos.X - 6
+		local topY = boxPos.Y
+		local bottomY = boxPos.Y + boxSize.Y
 
-        MainBar.From = Vector2.new(barX, bottomY)
-        MainBar.To = Vector2.new(barX, bottomY - healthHeight)
+		local healthHeight = boxSize.Y * ratio
 
-        OutlineBar.From = Vector2.new(barX, bottomY)
-        OutlineBar.To = Vector2.new(barX, topY)
+		Main.From = Vector2.new(barX,bottomY)
+		Main.To = Vector2.new(barX,bottomY-healthHeight)
 
-        MainBar.Color = Color3.fromRGB(
-            255 * (1 - ratio),
-            255 * ratio,
-            0
-        )
+		Outline.From = Vector2.new(barX,bottomY)
+		Outline.To = Vector2.new(barX,topY)
 
-        MainBar.Visible = true
-        OutlineBar.Visible = true
-    end)
+		Main.Color = Color3.fromRGB(
+			255*(1-ratio),
+			255*ratio,
+			0
+		)
 
-    self.Destroy = function()
-        if self.Update then
-            self.Update:Disconnect()
-            self.Update = nil
-        end
+		Main.Visible=true
+		Outline.Visible=true
 
-        if self.Main then
-            self.Main.Visible = false
-            self.Main = nil
-        end
+	end)
 
-        if self.Outline then
-            self.Outline.Visible = false
-            self.Outline = nil
-        end
-    end
+	function self:Destroy()
 
-    return self
+		if self.Update then
+			self.Update:Disconnect()
+		end
+
+		if Main then
+			Main.Visible=false
+		end
+
+		if Outline then
+			Outline.Visible=false
+		end
+
+	end
+
+	return self
+
 end
 
 function ESP.new(config)
-    local self = setmetatable(ESP,{})
-    self.Config = config or {}
-    self.Objects = {}
-    return self
+
+	local self=setmetatable({}, {__index=ESP})
+
+	self.Config=config or {}
+	self.Objects={}
+
+	return self
+
 end
 
 function ESP:WrapObject(object)
-    local Humanoid = object:FindFirstChildOfClass("Humanoid")
-    local rootPart = Humanoid and object:FindFirstChild("HumanoidRootPart") or object
-    if not rootPart then return end
 
-    local entity = {}
-    entity.Object = rootPart
+	local Humanoid = object:FindFirstChildOfClass("Humanoid")
+	local rootPart = Humanoid and object:FindFirstChild("HumanoidRootPart") or object
 
-    if self.Config.Box then
-        entity.Box = self.Elements.Box(rootPart)
-    end
+	if not rootPart then return end
 
-    if self.Config.Name then
-        entity.Name = self.Elements.Name(rootPart)
-    end
+	local entity={}
+	entity.Object=rootPart
 
-    if self.Config.Health and Humanoid then
-        entity.Health = self.Elements.HealthBar(rootPart, entity.Box)
-    end
+	if self.Config.Box then
+		entity.Box=self.Elements.Box(rootPart)
+	end
 
-    entity.Destroy = function()
-        if entity.Box then entity.Box:Destroy() end
-        if entity.Name then entity.Name:Destroy() end
-        if entity.Health then entity.Health:Destroy() end
-    end
+	if self.Config.Name then
+		entity.Name=self.Elements.Name(rootPart)
+	end
 
-    table.insert(self.Objects, entity)
-    return entity
+	if self.Config.Health then
+
+		local getHealth
+		local getMaxHealth
+
+		if self.Config.GetHealth then
+			getHealth=function()
+				return self.Config.GetHealth(object)
+			end
+		elseif Humanoid then
+			getHealth=function()
+				return Humanoid.Health
+			end
+		end
+
+		if self.Config.GetMaxHealth then
+			getMaxHealth=function()
+				return self.Config.GetMaxHealth(object)
+			end
+		elseif Humanoid then
+			getMaxHealth=function()
+				return Humanoid.MaxHealth
+			end
+		end
+
+		entity.Health=self.Elements.HealthBar(rootPart,entity.Box,getHealth,getMaxHealth)
+
+	end
+
+	function entity:Destroy()
+
+		if entity.Box then entity.Box:Destroy() end
+		if entity.Name then entity.Name:Destroy() end
+		if entity.Health then entity.Health:Destroy() end
+
+	end
+
+	table.insert(self.Objects,entity)
+
+	return entity
+
 end
 
 return ESP
