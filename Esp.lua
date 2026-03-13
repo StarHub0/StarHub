@@ -1,5 +1,11 @@
 -- Feel free to use, made by Hiasei
 
+--[[
+Usage:
+espInstance = ESP.new({Box = true, Name = true, Health = true})
+espInstance:WrapObject(char)
+]]
+
 local RunService = game:GetService("RunService")
 local Player = game:GetService("Players").LocalPlayer
 local UserInputService = game:GetService("UserInputService")
