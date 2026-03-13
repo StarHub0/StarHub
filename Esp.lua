@@ -149,51 +149,24 @@ ESP.Elements.HealthBar = function(object, boxObject, getHealth, getMaxHealth)
 
 	local self = {}
 
-	local Main = Drawing.new("Line")
-	Main.Thickness = 4
-	Main.Transparency = 1
-	Main.Visible = false
+	local Background = Drawing.new("Line")
+	Background.Color = Color3.fromRGB(0,0,0)
+	Background.Thickness = 6
+	Background.Transparency = 1
+	Background.Visible = false
 
-	local Outline = Drawing.new("Line")
-	Outline.Color = Color3.fromRGB(0,0,0)
-	Outline.Thickness = 6
-	Outline.Transparency = 1
-	Outline.Visible = false
+	local Bar = Drawing.new("Line")
+	Bar.Color = Color3.fromRGB(255,255,0)
+	Bar.Thickness = 4
+	Bar.Transparency = 1
+	Bar.Visible = false
 
-	self.Main = Main
-	self.Outline = Outline
+	self.Background = Background
+	self.Bar = Bar
 
 	local function hide()
-		Main.Visible = false
-		Outline.Visible = false
-	end
-
-	local function getHP()
-
-		local hp = 0
-		local max = 100
-
-		if getHealth then
-			local ok, val = pcall(getHealth)
-			if ok and val then
-				hp = val
-			end
-		end
-
-		if getMaxHealth then
-			local ok, val = pcall(getMaxHealth)
-			if ok and val then
-				max = val
-			end
-		end
-
-		hp = tonumber(hp) or 0
-		max = tonumber(max) or 100
-
-		if max <= 0 then max = 100 end
-		if hp < 0 then hp = 0 end
-
-		return hp, max
+		Background.Visible = false
+		Bar.Visible = false
 	end
 
 	self.Update = RunService.RenderStepped:Connect(function()
@@ -214,21 +187,24 @@ ESP.Elements.HealthBar = function(object, boxObject, getHealth, getMaxHealth)
 		end
 
 		local square = boxObject.Square
+
 		if not square.Visible then
 			hide()
 			return
 		end
 
-		local hp, max = getHP()
+		local hp = getHealth and getHealth() or 0
+		local max = getMaxHealth and getMaxHealth() or 100
+
+		hp = tonumber(hp) or 0
+		max = tonumber(max) or 100
+
+		if max <= 0 then max = 100 end
+
 		local ratio = math.clamp(hp / max, 0, 1)
 
 		local boxPos = square.Position
 		local boxSize = square.Size
-
-		if boxSize.Y <= 0 then
-			hide()
-			return
-		end
 
 		local barX = boxPos.X - 6
 		local topY = boxPos.Y
@@ -236,19 +212,14 @@ ESP.Elements.HealthBar = function(object, boxObject, getHealth, getMaxHealth)
 
 		local healthHeight = boxSize.Y * ratio
 
-		Outline.From = Vector2.new(barX, bottomY)
-		Outline.To = Vector2.new(barX, topY)
+		Background.From = Vector2.new(barX, bottomY)
+		Background.To = Vector2.new(barX, topY)
 
-		Main.From = Vector2.new(barX, bottomY)
-		Main.To = Vector2.new(barX, bottomY - healthHeight)
+		Bar.From = Vector2.new(barX, bottomY)
+		Bar.To = Vector2.new(barX, bottomY - healthHeight)
 
-		local r = math.floor(255 * (1 - ratio))
-		local g = math.floor(255 * ratio)
-
-		Main.Color = Color3.fromRGB(r, g, 0)
-
-		Main.Visible = true
-		Outline.Visible = true
+		Background.Visible = true
+		Bar.Visible = true
 
 	end)
 
@@ -258,12 +229,12 @@ ESP.Elements.HealthBar = function(object, boxObject, getHealth, getMaxHealth)
 			self.Update:Disconnect()
 		end
 
-		if Main then
-			Main:Destroy()
+		if Background then
+			Background:Destroy()
 		end
 
-		if Outline then
-			Outline:Destroy()
+		if Bar then
+			Bar:Destroy()
 		end
 
 	end
