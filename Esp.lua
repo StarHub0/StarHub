@@ -189,7 +189,7 @@ ESP.Elements.HealthBar = function(object,boxObject,getHealth,getMaxHealth)
 		local topY = boxPos.Y
 		local bottomY = boxPos.Y + boxSize.Y
 
-		local healthHeight = boxSize.Y * ratio
+		local healthHeight = math.max(boxSize.Y * ratio, 1)
 
 		Main.From = Vector2.new(barX,bottomY)
 		Main.To = Vector2.new(barX,bottomY-healthHeight)
