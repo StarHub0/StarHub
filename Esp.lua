@@ -124,76 +124,82 @@ ESP.Elements.Name = function(object)
     return self
 end
 
-ESP.Elements.HealthBar = function(object,boxObject)
+ESP.Elements.HealthBar = function(object, boxObject, getHealth, getMaxHealth)
     local self = {}
 
     local MainBar = Drawing.new("Line")
-    MainBar.Color = Color3.fromRGB(0, 255, 0)
     MainBar.Thickness = 4
-    MainBar.Visible = true
+    MainBar.Visible = false
 
     local OutlineBar = Drawing.new("Line")
-    OutlineBar.Color = Color3.fromRGB(0, 0, 0)
-    OutlineBar.Thickness = 5
-    OutlineBar.Visible = true
+    OutlineBar.Color = Color3.fromRGB(0,0,0)
+    OutlineBar.Thickness = 6
+    OutlineBar.Visible = false
 
     self.Main = MainBar
     self.Outline = OutlineBar
 
-    self.Ratio = 1
-
     self.Update = RunService.RenderStepped:Connect(function()
-        if not object.Parent then
-            return
-        end
-        if not IsWindowFocused and not game then
-            MainBar.Visible = false
-            OutlineBar.Visible = false
 
-            return
-        end
-        if not boxObject.Square then
-            if self.Update then self.Update:Disconnect() end
+        if not object.Parent then
             MainBar.Visible = false
             OutlineBar.Visible = false
             return
         end
+
+        if not IsWindowFocused then
+            MainBar.Visible = false
+            OutlineBar.Visible = false
+            return
+        end
+
+        if not boxObject or not boxObject.Square then
+            MainBar.Visible = false
+            OutlineBar.Visible = false
+            return
+        end
+
+        local health = getHealth and getHealth() or 0
+        local maxHealth = getMaxHealth and getMaxHealth() or 1
+
+        local ratio = math.clamp(health / maxHealth, 0, 1)
 
         local boxPos = boxObject.Square.Position
         local boxSize = boxObject.Square.Size
 
         local barX = boxPos.X - 6
-        local barYTop = boxPos.Y
-        local barYBottom = boxPos.Y + boxSize.Y
+        local topY = boxPos.Y
+        local bottomY = boxPos.Y + boxSize.Y
 
-        local ratio = math.clamp(self.Ratio, 0, 1)
+        local healthHeight = boxSize.Y * ratio
 
-        local from = Vector2.new(barX, barYBottom)
-        local to = Vector2.new(barX, barYBottom - boxSize.Y * ratio)
+        MainBar.From = Vector2.new(barX, bottomY)
+        MainBar.To = Vector2.new(barX, bottomY - healthHeight)
 
-        OutlineBar.From = Vector2.new(barX - 1, barYBottom)
-        OutlineBar.To = Vector2.new(barX + 1, barYTop)
-        OutlineBar.Visible = true
+        OutlineBar.From = Vector2.new(barX, bottomY)
+        OutlineBar.To = Vector2.new(barX, topY)
 
-        MainBar.From = from
-        MainBar.To = to
-        MainBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
+        MainBar.Color = Color3.fromRGB(
+            255 * (1 - ratio),
+            255 * ratio,
+            0
+        )
+
         MainBar.Visible = true
+        OutlineBar.Visible = true
     end)
-
-    function self:SetRatio(value)
-        self.Ratio = value
-    end
 
     self.Destroy = function()
         if self.Update then
             self.Update:Disconnect()
             self.Update = nil
         end
+
         if self.Main then
             self.Main.Visible = false
             self.Main = nil
         end
+
         if self.Outline then
             self.Outline.Visible = false
             self.Outline = nil
